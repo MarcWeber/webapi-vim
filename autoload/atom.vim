@@ -90,7 +90,7 @@ function! s:createXml(entry)
         let node.attr["type"] = a:entry['content.type']
         let node.attr["mode"] = a:entry['content.mode']
       endif
-      call add(entry.child, node)
+      call add(entry.childs, node)
     endif
   endfor
   let xml = '<?xml version="1.0" encoding="utf-8"?>' . entry.toString()
@@ -141,7 +141,7 @@ function! atom#createEntry(uri, user, pass, entry, ...)
 endfunction
 
 function! s:parse_node(target, parent)
-  for node in a:parent.child
+  for node in a:parent.childs
     if type(node) != 4 || !has_key(a:target, node.name)
       unlet node
       continue
@@ -165,7 +165,7 @@ function! s:parse_node(target, parent)
       call add(a:target.link, link)
     elseif node.name == 'author'
       let author = deepcopy(s:author_template)
-      for item in node.child
+      for item in node.childs
         if type(item) == 4 && has_key(author, item.name)
           let author[item.name] = item.value()
         endif

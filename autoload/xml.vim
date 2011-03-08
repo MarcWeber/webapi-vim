@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:template = { 'name': '', 'attr': {}, 'child': [] }
+let s:template = { 'name': '', 'attr': {}, 'childs': [] }
 
 function! s:nr2byte(nr)
   if a:nr < 0x80
@@ -83,7 +83,7 @@ function! s:matchNode(node, cond)
 endfunction
 
 function! s:template.childNode(...) dict
-  for c in self.child
+  for c in self.childs
     if type(c) == 4 && s:matchNode(c, a:000)
       return c
     endif
@@ -94,7 +94,7 @@ endfunction
 
 function! s:template.childNodes(...) dict
   let ret = []
-  for c in self.child
+  for c in self.childs
     if type(c) == 4 && s:matchNode(c, a:000)
       let ret += [c]
     endif
@@ -105,11 +105,11 @@ endfunction
 
 function! s:template.value(...) dict
   if a:0
-    let self.child = a:000
+    let self.childs = a:000
     return
   endif
   let ret = ''
-  for c in self.child
+  for c in self.childs
     if type(c) <= 1 || type(c) == 5
       let ret .= c
     elseif type(c) == 4
@@ -121,7 +121,7 @@ function! s:template.value(...) dict
 endfunction
 
 function! s:template.find(...) dict
-  for c in self.child
+  for c in self.childs
     if type(c) == 4
       if s:matchNode(c, a:000)
         return c
@@ -139,7 +139,7 @@ endfunction
 
 function! s:template.findAll(...) dict
   let ret = []
-  for c in self.child
+  for c in self.childs
     if type(c) == 4
       if s:matchNode(c, a:000)
         call add(ret, c)
@@ -156,9 +156,9 @@ function! s:template.toString() dict
   for attr in keys(self.attr)
     let xml .= ' ' . attr . '="' . self.attr[attr] . '"'
   endfor
-  if len(self.child)
+  if len(self.childs)
     let xml .= '>'
-    for c in self.child
+    for c in self.childs
       if type(c) == 4
         let xml .= c.toString()
       elseif type(c) > 1
@@ -187,7 +187,7 @@ function! s:parse_tree(ctx, top)
   let pos = 0
   " content accumulates the text only tags
   let content = ""
-  let append_content_to_parent = 'if content != "" | call add(stack[-1].child, content) | let content ="" | endif'
+  let append_content_to_parent = 'if content != "" | call add(stack[-1].childs, content) | let content ="" | endif'
 
   let mx = '^\s*\(<?xml[^>]\+>\)'
   if a:ctx['xml'] =~ mx
@@ -263,7 +263,7 @@ function! s:parse_tree(ctx, top)
     exec append_content_to_parent
 
     if len(stack)
-      call add(stack[-1].child, node)
+      call add(stack[-1].childs, node)
     endif
     if !is_start_and_end_tag
       " opening tag, continue parsing its contents
@@ -281,7 +281,7 @@ function! xml#parse(xml)
   let &maxfuncdepth=2000
   "try
     call s:parse_tree({'xml': a:xml, 'encoding': ''}, top)
-    for node in top.child
+    for node in top.childs
       if type(node) == 4
         return node
       endif

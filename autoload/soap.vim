@@ -14,16 +14,16 @@ function! s:soap_call(url, func, ...)
   let envelope.attr["xmlns:xsi"] = "http://www.w3.org/2001/XMLSchema-instance"
 
   let body = xml#createElement("soap:Body")
-  call add(envelope.child, body)
+  call add(envelope.childs, body)
   let func = xml#createElement(a:func)
-  call add(body.child, func)
+  call add(body.childs, func)
 
   let n = 1
   for a in a:000
     let arg = xml#createElement("param".n)
     let arg.attr["xsi:type"] = "xsd:string"
     call arg.value(a)
-    call add(func.child, arg)
+    call add(func.childs, arg)
     let n += 1
   endfor
 
@@ -36,8 +36,8 @@ endfunction
 function! s:parse_return(node)
   if a:node.attr["xsi:type"] =~ ":Array$"
     let arr = []
-    for item in a:node.child
-      call add(ret, s:parse_return(item.child)
+    for item in a:node.childs
+      call add(ret, s:parse_return(item.childs)
     endfor
     let ret = arr
   elseif a:node.attr["xsi:type"] =~ ":Map$"
@@ -51,9 +51,9 @@ function! s:parse_return(node)
       endif
     endfor
   else
-    if len(a:node.child)
+    if len(a:node.childs)
       let arr = []
-      for item in a:node.child
+      for item in a:node.childs
         call add(arr, s:parse_return(item)
       endfor
       let ret = arr
